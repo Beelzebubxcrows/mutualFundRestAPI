@@ -1,9 +1,11 @@
 package com.financeTracker.trackerAPIService.Controller;
 import java.util.List;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,53 +20,82 @@ public class DatabaseController {
     ModelRepository modelRepository;
   
     @PostMapping("mutualFundData/create")
-    public int CreateMutualFundData(@RequestBody DataModel dataModel)
+    public Response CreateMutualFundData(@RequestBody DataModel dataModel)
     {
        if(IsRequestAuthenticated()==false){
-        return HTTPResponse.SC_FORBIDDEN;
+        
+        var response  = new Response();
+        response.addHeader("Status", "403");
+        response.addHeader("Data", "");
+        
+        return response;
        }
 
         dataModel.UserId = GetUserId()+"_"+dataModel.MutualFundId;
         modelRepository.save(dataModel);
+        var response  = new Response();
+        response.addHeader("Status", "HTTPResponse.SC_OK");
+        response.addHeader("Data", dataModel.UserId.toString());
+
+
+        return response;
+    }
+
+    @GetMapping("mutualFundData/update")
+    public int UpdateMutualFundData(@RequestBody DataModel dataModel)
+    {
+        if(IsRequestAuthenticated()==false) {
+            return HTTPResponse.SC_FORBIDDEN;
+        }
+        List<DataModel> databaseData = modelRepository.findAll();
+        for(DataModel data : databaseData)
+        {
+            if(data.UserId.equals(GetUserId()) && data.MutualFundId==dataModel.MutualFundId){
+                modelRepository.delete(data);
+                modelRepository.save(dataModel);
+            }
+        }
 
         return HTTPResponse.SC_OK;
     }
 
-    @GetMapping("mutualFundData/read/")
-    public List<DataModel> ReadUserMutualFundData()
+
+    @GetMapping("mutualFundData/read/{mutualFundCode}")
+    public DataModel ReadUserMutualFundData(@PathVariable long mutualFundCode)
     {
         if(!IsRequestAuthenticated()){
             return null;
         }
        
-      return modelRepository.findAll();
+        List<DataModel> dataModels =  modelRepository.findAll();
+
+        for(DataModel data : dataModels)
+        {
+            if(data.MutualFundId == mutualFundCode){
+                return data;
+            }
+        }
+
+        return null;
     }
 
 
-    @GetMapping("mutualFundData/update")
-    public void UpdateMutualFundData(@RequestBody DataModel dataModel)
+    
+    @GetMapping("mutualFundData/delete/{mutualFundCode}")
+    public void DeleteUserMutualFund(@PathVariable long mutualFundCode)
     {
         if(IsRequestAuthenticated()==false) {
             return;
         }
+
         List<DataModel> databaseData = modelRepository.findAll();
         for(DataModel data : databaseData)
         {
-            if(data.UserId.equals(dataModel.UserId)){
-
+            if(data.UserId.equals(GetUserId())&& data.MutualFundId==mutualFundCode){
+                modelRepository.delete(data);
+    
             }
         }
-    }
-
-
-    @GetMapping("mutualFundData/delete")
-    public void DeleteUserMutualFund()
-    {
-        if(IsRequestAuthenticated()==false) {
-            return;
-        }
-
-
     }
 
    
