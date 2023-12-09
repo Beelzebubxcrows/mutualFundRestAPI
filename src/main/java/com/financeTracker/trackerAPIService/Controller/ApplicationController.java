@@ -59,6 +59,10 @@ public class ApplicationController {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             NavDataSerializeClass navDataSerializeClass = objectMapper.readValue(outputString,NavDataSerializeClass.class);
+            if(navDataSerializeClass.data.size()==0)
+            {
+                return -1;
+            }
             return navDataSerializeClass.data.get(0).nav;
         } catch (JsonProcessingException e) {
             e.printStackTrace();

@@ -1,8 +1,18 @@
 package com.financeTracker.trackerAPIService.Model;
 
-public class MutualFundData{
-    public long MutualFundId;
-    public String MutualFundName;
-    public float InvestedUnits;
-    public float InvestedValue;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@ToString
+public class MutualFundData
+{
+    public long mutualFundId;  
+    public String mutualFundName;
+    public float investedUnits;
+    public float investedValue;
+
 }

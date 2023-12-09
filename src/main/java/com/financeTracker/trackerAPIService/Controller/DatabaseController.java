@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financeTracker.Utility.CustomResponses;
 import com.financeTracker.trackerAPIService.Model.DataModel;
 import com.financeTracker.trackerAPIService.Model.ModelRepository;
@@ -29,12 +31,17 @@ public class DatabaseController {
        if(IsRequestAuthenticated()==false)  {
             return CustomResponses.getForbiddenReponse();
        }
-
+    
+       float currentMarketValue = ApplicationController.GetMutualFundNavValue(mutualFundData.mutualFundId);
+       if(currentMarketValue==-1)
+       {
+        return CustomResponses.getErrorResponse("Mutual fund code is wrong.");
+       }
        boolean isAlreadyPresent = false;
         List<DataModel> dataModels =  modelRepository.findAll();
         for(DataModel dataModel : dataModels)
         {
-            if(dataModel.UserId.equals(GetUserId()))
+            if(dataModel.id.equals(GetUserId()))
             {
                 dataModel.mutualFundData.add(mutualFundData);
                 modelRepository.save(dataModel);
@@ -44,7 +51,7 @@ public class DatabaseController {
 
         if(!isAlreadyPresent){
             DataModel datamodel = new DataModel();
-            datamodel.UserId = GetUserId();
+            datamodel.id = GetUserId();
             datamodel.mutualFundData = new ArrayList<>();
             datamodel.mutualFundData.add(mutualFundData);
             modelRepository.save(datamodel);
@@ -55,33 +62,37 @@ public class DatabaseController {
     }
 
     @PostMapping("mutualFundData/update")
-    public HashMap<String, String> UpdateMutualFundData(@RequestBody MutualFundData mutualFundData)
+    public HashMap<String, String> UpdateMutualFundData(@RequestBody MutualFundData mutualFundDataRequest)
     {
         if(IsRequestAuthenticated()==false)  {
             return CustomResponses.getForbiddenReponse();
        }
 
-       boolean isAlreadyPresent = false;
+       
         List<DataModel> dataModels =  modelRepository.findAll();
         for(DataModel dataModel : dataModels)
         {
-            if(dataModel.UserId.equals(GetUserId()))
+            if(dataModel.id.equals(GetUserId()))
             {
-                dataModel.mutualFundData.add(mutualFundData);
-                modelRepository.save(dataModel);
-                isAlreadyPresent = true;
+                for(MutualFundData mutualFundData : dataModel.mutualFundData)
+                {
+                    if(mutualFundData.mutualFundId == (mutualFundDataRequest.mutualFundId))
+                    {
+                        mutualFundData.investedUnits = mutualFundDataRequest.investedUnits;
+                        mutualFundData.investedValue = mutualFundDataRequest.investedValue;
+                        mutualFundData.mutualFundId = mutualFundDataRequest.mutualFundId;
+                        mutualFundData.mutualFundName = mutualFundDataRequest.mutualFundName;
+                        modelRepository.save(dataModel);
+                        return CustomResponses.getSuccessResponse(mutualFundData.toString());
+                    }
+                }
+            
             }
         }
 
-        if(!isAlreadyPresent){
-            DataModel datamodel = new DataModel();
-            datamodel.UserId = GetUserId();
-            datamodel.mutualFundData = new ArrayList<>();
-            datamodel.mutualFundData.add(mutualFundData);
-            modelRepository.save(datamodel);
-        }
 
-        return CustomResponses.getSuccessResponse(mutualFundData.toString());
+
+        return CustomResponses.getErrorResponse("No data with this code is present.");
     }
 
     
@@ -98,9 +109,9 @@ public class DatabaseController {
 
         for(DataModel data : dataModels)
         {
-            if(data.UserId == GetUserId())  {
+            if(data.id.equals(GetUserId()))  {
                 for (MutualFundData mutualFundData : data.mutualFundData) {
-                    if(mutualFundData.MutualFundId == mutualFundCode){
+                    if(mutualFundData.mutualFundId == mutualFundCode){
                         var response  = CustomResponses.getSuccessResponse(mutualFundData.toString());
                         return response;
                     }
@@ -122,7 +133,7 @@ public class DatabaseController {
 
         for(DataModel data : dataModels)
         {
-            if(data.UserId == GetUserId())  {
+            if(data.id.equals(GetUserId()))  {
                 var response  = CustomResponses.getSuccessResponse(data.mutualFundData.toString());
                 return response;
             }
@@ -144,16 +155,25 @@ public class DatabaseController {
 
         for(DataModel data : dataModels)
         {
-            if(data.UserId == GetUserId())  {
+            if(data.id.equals(GetUserId()))  {
                 List<MutualFundData> mutualFundDatas = new ArrayList<>(data.mutualFundData);
 
                 for (MutualFundData mutualFundData : data.mutualFundData) {
-                    if(mutualFundData.MutualFundId == mutualFundCode){
+                    if(mutualFundData.mutualFundId == mutualFundCode){
                         mutualFundDatas.remove(mutualFundData);
                     }
                 }
                 data.mutualFundData = mutualFundDatas;
-                modelRepository.save(data);
+                
+                if(mutualFundDatas.size()==0)
+                {
+                    modelRepository.delete(data);
+                }
+                else
+                {
+                    modelRepository.save(data);
+                }
+
                 return CustomResponses.getSuccessResponse("Deleted : "+mutualFundCode);
             }
         }
@@ -174,15 +194,15 @@ public class DatabaseController {
 
         for(DataModel data : dataModels)
         {
-            if(data.UserId == GetUserId())  {
+            if(data.id.equals(GetUserId()))  {
 
                 for(MutualFundData mutualFundData : data.mutualFundData)
                 {
                     MutualFundReport mutualFundReport = new MutualFundReport();
-                    mutualFundReport.name = mutualFundData.MutualFundName;
-                    mutualFundReport.investedValue = mutualFundData.InvestedValue;
-                    float currentMarketValue = ApplicationController.GetMutualFundNavValue(mutualFundData.MutualFundId);
-                    mutualFundReport.currentValue = mutualFundData.InvestedUnits * currentMarketValue;
+                    mutualFundReport.name = mutualFundData.mutualFundName;
+                    mutualFundReport.investedValue = mutualFundData.investedValue;
+                    float currentMarketValue = ApplicationController.GetMutualFundNavValue(mutualFundData.mutualFundId);
+                    mutualFundReport.currentValue = mutualFundData.investedUnits * currentMarketValue;
                     mutualFundReport.returnValue = mutualFundReport.currentValue - mutualFundReport.investedValue;
                     mutualFundReport.returnPercentage = ((mutualFundReport.returnValue)/mutualFundReport.currentValue)*100;
                     mutualFundReports.add(mutualFundReport);
@@ -190,8 +210,12 @@ public class DatabaseController {
             
             }
         }
-
-        return CustomResponses.getSuccessResponse(mutualFundReports.toString());
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return CustomResponses.getSuccessResponse(objectMapper.writeValueAsString(mutualFundReports));
+        } catch (JsonProcessingException e) {
+            return CustomResponses.getErrorResponse("Report Generation failed");
+        }
     }
 
    
@@ -207,7 +231,7 @@ public class DatabaseController {
 
     private String GetUserId()
     {
-        if(_userId.length()==0)
+        if(_userId==null || _userId.length()==0)
         {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             _userId = authentication.getName();

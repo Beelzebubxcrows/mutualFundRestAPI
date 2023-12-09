@@ -1,12 +1,13 @@
 package com.financeTracker.Utility;
 import java.util.HashMap;
+
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 
 public class CustomResponses {
 
     public static HashMap<String, String> getForbiddenReponse() {
         HashMap<String, String> response = new HashMap<>();
-      response.put("Status", "403");
+      response.put("Status", Integer.toString(HTTPResponse.SC_FORBIDDEN));
       response.put("Data", "");
       
       return response;
