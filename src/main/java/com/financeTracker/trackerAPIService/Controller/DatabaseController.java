@@ -1,6 +1,7 @@
 package com.financeTracker.trackerAPIService.Controller;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -9,9 +10,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.financeTracker.Utility.CustomResponses;
 import com.financeTracker.trackerAPIService.Model.DataModel;
 import com.financeTracker.trackerAPIService.Model.ModelRepository;
-import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import com.financeTracker.trackerAPIService.Model.MutualFundData;
+import com.financeTracker.trackerAPIService.Model.MutualFundReport;
 
 @RestController
 public class DatabaseController {
@@ -20,82 +24,174 @@ public class DatabaseController {
     ModelRepository modelRepository;
   
     @PostMapping("mutualFundData/create")
-    public Response CreateMutualFundData(@RequestBody DataModel dataModel)
+    public HashMap<String, String> CreateMutualFundData(@RequestBody MutualFundData mutualFundData)
     {
-       if(IsRequestAuthenticated()==false){
-        
-        var response  = new Response();
-        response.addHeader("Status", "403");
-        response.addHeader("Data", "");
-        
-        return response;
+       if(IsRequestAuthenticated()==false)  {
+            return CustomResponses.getForbiddenReponse();
        }
 
-        dataModel.UserId = GetUserId()+"_"+dataModel.MutualFundId;
-        modelRepository.save(dataModel);
-        var response  = new Response();
-        response.addHeader("Status", "HTTPResponse.SC_OK");
-        response.addHeader("Data", dataModel.UserId.toString());
-
-
-        return response;
-    }
-
-    @GetMapping("mutualFundData/update")
-    public int UpdateMutualFundData(@RequestBody DataModel dataModel)
-    {
-        if(IsRequestAuthenticated()==false) {
-            return HTTPResponse.SC_FORBIDDEN;
-        }
-        List<DataModel> databaseData = modelRepository.findAll();
-        for(DataModel data : databaseData)
+       boolean isAlreadyPresent = false;
+        List<DataModel> dataModels =  modelRepository.findAll();
+        for(DataModel dataModel : dataModels)
         {
-            if(data.UserId.equals(GetUserId()) && data.MutualFundId==dataModel.MutualFundId){
-                modelRepository.delete(data);
+            if(dataModel.UserId.equals(GetUserId()))
+            {
+                dataModel.mutualFundData.add(mutualFundData);
                 modelRepository.save(dataModel);
+                isAlreadyPresent = true;
             }
         }
 
-        return HTTPResponse.SC_OK;
+        if(!isAlreadyPresent){
+            DataModel datamodel = new DataModel();
+            datamodel.UserId = GetUserId();
+            datamodel.mutualFundData = new ArrayList<>();
+            datamodel.mutualFundData.add(mutualFundData);
+            modelRepository.save(datamodel);
+        }
+
+    
+        return CustomResponses.getSuccessResponse(mutualFundData.toString());
     }
+
+    @PostMapping("mutualFundData/update")
+    public HashMap<String, String> UpdateMutualFundData(@RequestBody MutualFundData mutualFundData)
+    {
+        if(IsRequestAuthenticated()==false)  {
+            return CustomResponses.getForbiddenReponse();
+       }
+
+       boolean isAlreadyPresent = false;
+        List<DataModel> dataModels =  modelRepository.findAll();
+        for(DataModel dataModel : dataModels)
+        {
+            if(dataModel.UserId.equals(GetUserId()))
+            {
+                dataModel.mutualFundData.add(mutualFundData);
+                modelRepository.save(dataModel);
+                isAlreadyPresent = true;
+            }
+        }
+
+        if(!isAlreadyPresent){
+            DataModel datamodel = new DataModel();
+            datamodel.UserId = GetUserId();
+            datamodel.mutualFundData = new ArrayList<>();
+            datamodel.mutualFundData.add(mutualFundData);
+            modelRepository.save(datamodel);
+        }
+
+        return CustomResponses.getSuccessResponse(mutualFundData.toString());
+    }
+
+    
 
 
     @GetMapping("mutualFundData/read/{mutualFundCode}")
-    public DataModel ReadUserMutualFundData(@PathVariable long mutualFundCode)
+    public HashMap<String, String> ReadUserMutualFundData(@PathVariable long mutualFundCode)
     {
         if(!IsRequestAuthenticated()){
-            return null;
+            return CustomResponses.getForbiddenReponse();
         }
        
         List<DataModel> dataModels =  modelRepository.findAll();
 
         for(DataModel data : dataModels)
         {
-            if(data.MutualFundId == mutualFundCode){
-                return data;
+            if(data.UserId == GetUserId())  {
+                for (MutualFundData mutualFundData : data.mutualFundData) {
+                    if(mutualFundData.MutualFundId == mutualFundCode){
+                        var response  = CustomResponses.getSuccessResponse(mutualFundData.toString());
+                        return response;
+                    }
+                }
             }
         }
 
-        return null;
+        return CustomResponses.getErrorResponse("You do not have any mutual fund with this code yet.");
+    }
+
+    @GetMapping("mutualFundData/readAll")
+    public HashMap<String, String> ReadAllUserMutualFundData()
+    {
+       if(!IsRequestAuthenticated()){
+            return CustomResponses.getForbiddenReponse();
+        }
+       
+        List<DataModel> dataModels =  modelRepository.findAll();
+
+        for(DataModel data : dataModels)
+        {
+            if(data.UserId == GetUserId())  {
+                var response  = CustomResponses.getSuccessResponse(data.mutualFundData.toString());
+                return response;
+            }
+        }
+
+        return CustomResponses.getErrorResponse("You do not have any mutual fund entry yet.");
     }
 
 
     
-    @GetMapping("mutualFundData/delete/{mutualFundCode}")
-    public void DeleteUserMutualFund(@PathVariable long mutualFundCode)
+    @PostMapping("mutualFundData/delete/{mutualFundCode}")
+    public HashMap<String, String> DeleteUserMutualFund(@PathVariable long mutualFundCode)
     {
         if(IsRequestAuthenticated()==false) {
-            return;
+            return CustomResponses.getForbiddenReponse();
         }
 
-        List<DataModel> databaseData = modelRepository.findAll();
-        for(DataModel data : databaseData)
+         List<DataModel> dataModels =  modelRepository.findAll();
+
+        for(DataModel data : dataModels)
         {
-            if(data.UserId.equals(GetUserId())&& data.MutualFundId==mutualFundCode){
-                modelRepository.delete(data);
-    
+            if(data.UserId == GetUserId())  {
+                List<MutualFundData> mutualFundDatas = new ArrayList<>(data.mutualFundData);
+
+                for (MutualFundData mutualFundData : data.mutualFundData) {
+                    if(mutualFundData.MutualFundId == mutualFundCode){
+                        mutualFundDatas.remove(mutualFundData);
+                    }
+                }
+                data.mutualFundData = mutualFundDatas;
+                modelRepository.save(data);
+                return CustomResponses.getSuccessResponse("Deleted : "+mutualFundCode);
             }
         }
+
+        return CustomResponses.getErrorResponse("You do not have any mutual fund entry with this code.");
+    }
+
+
+    @GetMapping("mutualFundData/getMutualFundReport")
+    public HashMap<String, String> GetMutualFundReport()
+    {
+        if(IsRequestAuthenticated()==false) {
+            return CustomResponses.getForbiddenReponse();
+        }
+
+        List<MutualFundReport> mutualFundReports = new ArrayList<>();
+        List<DataModel> dataModels =  modelRepository.findAll();
+
+        for(DataModel data : dataModels)
+        {
+            if(data.UserId == GetUserId())  {
+
+                for(MutualFundData mutualFundData : data.mutualFundData)
+                {
+                    MutualFundReport mutualFundReport = new MutualFundReport();
+                    mutualFundReport.name = mutualFundData.MutualFundName;
+                    mutualFundReport.investedValue = mutualFundData.InvestedValue;
+                    float currentMarketValue = ApplicationController.GetMutualFundNavValue(mutualFundData.MutualFundId);
+                    mutualFundReport.currentValue = mutualFundData.InvestedUnits * currentMarketValue;
+                    mutualFundReport.returnValue = mutualFundReport.currentValue - mutualFundReport.investedValue;
+                    mutualFundReport.returnPercentage = ((mutualFundReport.returnValue)/mutualFundReport.currentValue)*100;
+                    mutualFundReports.add(mutualFundReport);
+                }
+            
+            }
+        }
+
+        return CustomResponses.getSuccessResponse(mutualFundReports.toString());
     }
 
    
@@ -107,10 +203,17 @@ public class DatabaseController {
         return authentication!=null && authentication.isAuthenticated();
     }
 
+    private String _userId;
+
     private String GetUserId()
     {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getName();
+        if(_userId.length()==0)
+        {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            _userId = authentication.getName();
+        }
+        
+        return _userId;
     }
 
     

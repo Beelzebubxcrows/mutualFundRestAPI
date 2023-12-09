@@ -29,7 +29,17 @@ public class ApplicationController {
     {
        
         OAuth2User userInfo = authToken.getPrincipal();
-        return " Welcome "+userInfo.getName()+" !\n You are logged in. "+modelRepository.findAll().get(0).InvestedUnits;
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(" Welcome "+userInfo.getAttribute("given_name")+" ! You are logged in.<br><br>");
+
+        stringBuilder.append("mutualFundData/create  - This takes in application-json.<br>");
+        stringBuilder.append("mutualFundData/read/{mutualFundCode}  - This returns the data about mutual fund.<br>");
+        stringBuilder.append("mutualFundData/update  - This takes in application-json.<br>");
+        stringBuilder.append("mutualFundData/delete/{mutualFundCode}  - This deletes the mutual fund entry.<br>");
+        stringBuilder.append("mutualFundMarket/navValue/{mutualFundCode}  - This returns the current market value of a mutual fund.");
+       
+
+        return stringBuilder.toString();
     }
 
     @GetMapping("mutualFundMarket/navValue/{mutualFundCode}")
