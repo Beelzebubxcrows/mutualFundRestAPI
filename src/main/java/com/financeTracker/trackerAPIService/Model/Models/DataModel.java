@@ -1,4 +1,4 @@
-package com.financeTracker.trackerAPIService.Model;
+package com.financeTracker.trackerAPIService.Model.Models;
 
 import java.util.ArrayList;
 import java.util.List;

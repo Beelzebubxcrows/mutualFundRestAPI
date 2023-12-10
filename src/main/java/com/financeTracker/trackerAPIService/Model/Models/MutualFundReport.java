@@ -1,4 +1,4 @@
-package com.financeTracker.trackerAPIService.Model;
+package com.financeTracker.trackerAPIService.Model.Models;
 
 public class MutualFundReport {
 

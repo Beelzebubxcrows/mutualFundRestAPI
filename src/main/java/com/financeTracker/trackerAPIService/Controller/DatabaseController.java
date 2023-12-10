@@ -3,8 +3,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,10 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financeTracker.Utility.CustomResponses;
-import com.financeTracker.trackerAPIService.Model.DataModel;
+import com.financeTracker.Utility.UserAuthentication;
 import com.financeTracker.trackerAPIService.Model.ModelRepository;
-import com.financeTracker.trackerAPIService.Model.MutualFundData;
-import com.financeTracker.trackerAPIService.Model.MutualFundReport;
+import com.financeTracker.trackerAPIService.Model.Models.DataModel;
+import com.financeTracker.trackerAPIService.Model.Models.MutualFundData;
+import com.financeTracker.trackerAPIService.Model.Models.MutualFundReport;
 
 @RestController
 public class DatabaseController {
@@ -28,7 +27,7 @@ public class DatabaseController {
     @PostMapping("mutualFundData/create")
     public HashMap<String, String> CreateMutualFundData(@RequestBody MutualFundData mutualFundData)
     {
-       if(IsRequestAuthenticated()==false)  {
+       if(UserAuthentication.IsRequestAuthenticated()==false)  {
             return CustomResponses.getForbiddenReponse();
        }
     
@@ -41,7 +40,7 @@ public class DatabaseController {
         List<DataModel> dataModels =  modelRepository.findAll();
         for(DataModel dataModel : dataModels)
         {
-            if(dataModel.id.equals(GetUserId()))
+            if(dataModel.id.equals(UserAuthentication.GetUserId()))
             {
                 dataModel.mutualFundData.add(mutualFundData);
                 modelRepository.save(dataModel);
@@ -51,7 +50,7 @@ public class DatabaseController {
 
         if(!isAlreadyPresent){
             DataModel datamodel = new DataModel();
-            datamodel.id = GetUserId();
+            datamodel.id = UserAuthentication.GetUserId();
             datamodel.mutualFundData = new ArrayList<>();
             datamodel.mutualFundData.add(mutualFundData);
             modelRepository.save(datamodel);
@@ -64,7 +63,7 @@ public class DatabaseController {
     @PostMapping("mutualFundData/update")
     public HashMap<String, String> UpdateMutualFundData(@RequestBody MutualFundData mutualFundDataRequest)
     {
-        if(IsRequestAuthenticated()==false)  {
+        if(UserAuthentication.IsRequestAuthenticated()==false)  {
             return CustomResponses.getForbiddenReponse();
        }
 
@@ -72,7 +71,7 @@ public class DatabaseController {
         List<DataModel> dataModels =  modelRepository.findAll();
         for(DataModel dataModel : dataModels)
         {
-            if(dataModel.id.equals(GetUserId()))
+            if(dataModel.id.equals(UserAuthentication.GetUserId()))
             {
                 for(MutualFundData mutualFundData : dataModel.mutualFundData)
                 {
@@ -101,7 +100,7 @@ public class DatabaseController {
     @GetMapping("mutualFundData/read/{mutualFundCode}")
     public HashMap<String, String> ReadUserMutualFundData(@PathVariable long mutualFundCode)
     {
-        if(!IsRequestAuthenticated()){
+        if(!UserAuthentication.IsRequestAuthenticated()){
             return CustomResponses.getForbiddenReponse();
         }
        
@@ -109,7 +108,7 @@ public class DatabaseController {
 
         for(DataModel data : dataModels)
         {
-            if(data.id.equals(GetUserId()))  {
+            if(data.id.equals(UserAuthentication.GetUserId()))  {
                 for (MutualFundData mutualFundData : data.mutualFundData) {
                     if(mutualFundData.mutualFundId == mutualFundCode){
                         var response  = CustomResponses.getSuccessResponse(mutualFundData.toString());
@@ -125,7 +124,7 @@ public class DatabaseController {
     @GetMapping("mutualFundData/readAll")
     public HashMap<String, String> ReadAllUserMutualFundData()
     {
-       if(!IsRequestAuthenticated()){
+       if(!UserAuthentication.IsRequestAuthenticated()){
             return CustomResponses.getForbiddenReponse();
         }
        
@@ -133,7 +132,7 @@ public class DatabaseController {
 
         for(DataModel data : dataModels)
         {
-            if(data.id.equals(GetUserId()))  {
+            if(data.id.equals(UserAuthentication.GetUserId()))  {
                 var response  = CustomResponses.getSuccessResponse(data.mutualFundData.toString());
                 return response;
             }
@@ -147,7 +146,7 @@ public class DatabaseController {
     @PostMapping("mutualFundData/delete/{mutualFundCode}")
     public HashMap<String, String> DeleteUserMutualFund(@PathVariable long mutualFundCode)
     {
-        if(IsRequestAuthenticated()==false) {
+        if(UserAuthentication.IsRequestAuthenticated()==false) {
             return CustomResponses.getForbiddenReponse();
         }
 
@@ -155,7 +154,7 @@ public class DatabaseController {
 
         for(DataModel data : dataModels)
         {
-            if(data.id.equals(GetUserId()))  {
+            if(data.id.equals(UserAuthentication.GetUserId()))  {
                 List<MutualFundData> mutualFundDatas = new ArrayList<>(data.mutualFundData);
 
                 for (MutualFundData mutualFundData : data.mutualFundData) {
@@ -185,7 +184,7 @@ public class DatabaseController {
     @GetMapping("mutualFundData/getMutualFundReport")
     public HashMap<String, String> GetMutualFundReport()
     {
-        if(IsRequestAuthenticated()==false) {
+        if(UserAuthentication.IsRequestAuthenticated()==false) {
             return CustomResponses.getForbiddenReponse();
         }
 
@@ -194,7 +193,7 @@ public class DatabaseController {
 
         for(DataModel data : dataModels)
         {
-            if(data.id.equals(GetUserId()))  {
+            if(data.id.equals(UserAuthentication.GetUserId()))  {
 
                 for(MutualFundData mutualFundData : data.mutualFundData)
                 {
@@ -221,24 +220,7 @@ public class DatabaseController {
    
 
 
-    private boolean IsRequestAuthenticated()
-    {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication!=null && authentication.isAuthenticated();
-    }
-
-    private String _userId;
-
-    private String GetUserId()
-    {
-        if(_userId==null || _userId.length()==0)
-        {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            _userId = authentication.getName();
-        }
-        
-        return _userId;
-    }
+   
 
     
 }

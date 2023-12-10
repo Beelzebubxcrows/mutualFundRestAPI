@@ -1,8 +1,5 @@
 package com.financeTracker.trackerAPIService.Controller;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financeTracker.Utility.RequestHandler;
+import com.financeTracker.Utility.UserAuthentication;
 import com.financeTracker.trackerAPIService.Model.ModelRepository;
 import com.financeTracker.trackerAPIService.SerializeClass.NavDataSerializeClass;
 
@@ -45,7 +43,7 @@ public class ApplicationController {
     @GetMapping("mutualFundMarket/navValue/{mutualFundCode}")
     public float GetNavData(@PathVariable long mutualFundCode)
     {
-        if(IsRequestAuthenticated()==false) {
+        if(UserAuthentication.IsRequestAuthenticated()==false) {
             return 0f;
         }
 
@@ -70,12 +68,6 @@ public class ApplicationController {
 
         return 0f;
 
-    }
-
-    private boolean IsRequestAuthenticated()
-    {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication!=null && authentication.isAuthenticated();
     }
 
 
