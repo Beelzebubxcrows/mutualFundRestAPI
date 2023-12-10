@@ -20,11 +20,12 @@ A Spring Boot REST API service that helps you store your mutual fund data and ge
 ## Authentication
 The project uses Spring Security for OAuth2 authentication. 
 The OAuth2 provider is Google. We need to authenticate via Google to access the API.
+The keys related to Google OAuth2 are not pushed due to security reasons.
 
 
 ## Database
 The application is connected to a MongoDB cluster for data storage.
-
+The keys related to MongoDB cluster are not pushed due to security reasons.
 
 
 ## API Endpoints
