@@ -30,12 +30,71 @@ public class ApplicationController {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(" Welcome "+userInfo.getAttribute("given_name")+" ! You are logged in.<br><br>");
 
-        stringBuilder.append("mutualFundData/create  - This takes in application-json.<br>");
-        stringBuilder.append("mutualFundData/read/{mutualFundCode}  - This returns the data about mutual fund.<br>");
-        stringBuilder.append("mutualFundData/update  - This takes in application-json.<br>");
-        stringBuilder.append("mutualFundData/delete/{mutualFundCode}  - This deletes the mutual fund entry.<br>");
-        stringBuilder.append("mutualFundMarket/navValue/{mutualFundCode}  - This returns the current market value of a mutual fund.");
+        stringBuilder.append("RESPONSE format : <br>");
+        stringBuilder.append("{\"status\":\"\",\"data\":\"\"}");
+stringBuilder.append("<br><br>");
+        stringBuilder.append("POST APIs : <br><br>");
+        
+        stringBuilder.append("ENDPOINT : mutualFundData/create <br>");
        
+        stringBuilder.append("BODY : application/json <br>");
+        stringBuilder.append("JSON format : {\n" + //
+                "  \n" + //
+                "      \"mutualFundId\": \"122639\",\n" + //
+                "      \"mutualFundName\": \"Parag Parikh Flexi Cap Fund - Direct Plan - Growth\",\n" + //
+                "      \"investedUnits\": 344.6,\n" + //
+                "      \"investedValue\": 19749\n" + //
+                "    \n" + //
+                "  \n" + //
+                "} <br>");
+                stringBuilder.append("DESCRIPTION : This creates an entry for the provided mutual fund.");
+        stringBuilder.append("<br><br>");
+
+        stringBuilder.append("ENDPOINT : mutualFundData/update <br>");
+       
+        stringBuilder.append("BODY : application/json <br>");
+        stringBuilder.append("JSON format : {\n" + //
+                "  \n" + //
+                "      \"mutualFundId\": \"122639\",\n" + //
+                "      \"mutualFundName\": \"Parag Parikh Flexi Cap Fund - Direct Plan - Growth\",\n" + //
+                "      \"investedUnits\": 344.6,\n" + //
+                "      \"investedValue\": 19749\n" + //
+                "    \n" + //
+                "  \n" + //
+                "} <br>");
+stringBuilder.append("DESCRIPTION : This updates the already present entry.");
+stringBuilder.append("<br><br>");
+
+        stringBuilder.append("ENDPOINT : mutualFundData/delete/{mutualFundCode} <br>");
+        stringBuilder.append("TYPE : POST <br>");
+    stringBuilder.append("DESCRIPTION : This deletes the already present entry.");
+
+stringBuilder.append("<br><br><br>");
+
+stringBuilder.append("GET APIs : <br><br>");
+
+  stringBuilder.append("ENDPOINT : mutualFundData/readAll <br>");
+     
+        stringBuilder.append("DESCRIPTION : Gives data about all the mutual fund present");
+    
+
+stringBuilder.append("<br><br>");
+
+stringBuilder.append("ENDPOINT : mutualFundData/read/{mutualFundCode} <br>");
+      
+        stringBuilder.append("DESCRIPTION :Gives data about a particular mutual fund present");
+    
+
+stringBuilder.append("<br><br>");
+
+
+stringBuilder.append("ENDPOINT : mutualFundData/getMutualFundReport <br>");
+       
+        stringBuilder.append("DESCRIPTION :Generates a mutual fund report.");
+    
+
+stringBuilder.append("<br><br>");
+
 
         return stringBuilder.toString();
     }
