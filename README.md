@@ -5,6 +5,7 @@ A Spring Boot REST API service that helps you store your mutual fund data and ge
 
 
 ## Table of Contents
+- [How To Run](#how-to-run)
 - [Authentication](#authentication)
 - [Database](#database)
 - [Usage](#usage)
@@ -16,6 +17,15 @@ A Spring Boot REST API service that helps you store your mutual fund data and ge
     - [Read Specific Mutual Fund](#read-specific-mutual-fund)
     - [Generate Mutual Fund Report](#generate-mutual-fund-report)
 
+
+##How To Run
+- The project is dockerised and uploaded to docker hub.
+- Run `docker run -p 8080:8080 amireripmav786433/trackerapiservice`
+- This will download the docker image if not present locally.
+
+- Goto `localhost:8080`
+- You will have to sign in using your Google account.
+- You are ready to hit the end-points.
 
 ## Authentication
 The project uses Spring Security for OAuth2 authentication. 
